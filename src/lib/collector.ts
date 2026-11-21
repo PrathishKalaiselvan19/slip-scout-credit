@@ -1,12 +1,20 @@
 export const CHECKER_URL = "https://collecty.kalaiselvanprathish.workers.dev";
 export const PRICING = { recoveryRate: 0.30, upfront: 0, doorGuardMonthly: 199 };
-export const DEMO = `INVOICE #44821 — Sysco Foods
-Deliver to: Rosa's Kitchen
-Tomatoes, Roma 25lb   10 cs @ $25.00 = $250.00  (contract $20.00)
-Chicken Breast 40lb    5 cs @ $92.00 = $460.00  (contract $92.00)
-Olive Oil 3L           6 ea @ $18.50 = $111.00
-Received: Tomatoes 8 cs, Chicken 5 cs, Olive Oil 4 ea
-TOTAL DUE: $821.00`;
+export const DEMO = `INVOICE
+Invoice Number: GTA-26-2210   Date: 2026-11-20
+Supplier: Ontario Fresh Foods Wholesale (Sample)
+Bill To: Parkside Bistro Group (Sample)
+Description | Qty | Unit Price | Line Total
+Produce — tomatoes, lettuce, onions, herbs | 12 | $22.50 | $270.00
+Dairy — mozzarella, cream, butter | 8 | $37.00 | $296.00
+Dry goods — pasta, flour, canned tomatoes | 10 | $28.00 | $280.00
+Proteins — chicken breast | 15 | $39.00 | $585.00
+Beverages — sparkling water & soft drinks | 6 | $32.00 | $192.00
+Beverages — sparkling water & soft drinks | 6 | $32.00 | $192.00
+Imported olive oil — 1L bottle | 24 | $96.00 | $2,304.00
+Subtotal $4,119.00
+HST (13%) $617.85
+TOTAL DUE $4,736.85`;
 export type Issue = { item: string; type: string; charged?: number; should_be?: number; overcharge: number };
 export type Result = { verdict: string; owed?: number; issues?: Issue[]; message_to_driver?: string; credit_email?: string };
 export const money = (n?: number) => `$${(n ?? 0).toFixed(2).replace(/\.00$/, "")}`;
@@ -55,5 +63,7 @@ export async function readPdf(file: File): Promise<{ text: string } | { image: s
     if (!ctx) throw new Error("Couldn't read that PDF");
     await page.render({ canvasContext: ctx, canvas, viewport }).promise;
     return { image: canvas.toDataURL("image/jpeg", 0.85) };
-  } finally { await pdf.destroy(); }
+  } finally {
+    try { await (pdf as any).destroy?.(); } catch { /* ignore cleanup errors */ }
+  }
 }

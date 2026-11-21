@@ -3,12 +3,13 @@ import { ArrowUpRight, Camera, Check, CheckCheck, Copy, FileUp, LoaderCircle, Sc
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CountUp } from "@/components/count-up";
-import { CHECKER_URL, DEMO, money, readPdf, resize, type Result } from "@/lib/collector";
+import { CHECKER_URL, CONTRACT, DEMO, money, readPdf, resize, type Result } from "@/lib/collector";
 
 export function Scanner() {
   const photoRef = useRef<HTMLInputElement>(null);
   const pdfRef = useRef<HTMLInputElement>(null);
   const [text, setText] = useState("");
+  const [contract, setContract] = useState(CONTRACT);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(0);
   const [error, setError] = useState("");
@@ -23,7 +24,7 @@ export function Scanner() {
   }, [loading]);
 
   async function check(body: object) {
-    const response = await fetch(CHECKER_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const response = await fetch(CHECKER_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...body, contract }) });
     if (!response.ok) throw new Error(`The checker couldn't finish (${response.status}). Please try again.`);
     const data: Result = await response.json();
     if (!data.verdict) throw new Error("The checker returned an incomplete result. Please try again.");
@@ -59,6 +60,11 @@ export function Scanner() {
         <Button variant="secondary" className="mt-4 h-12 w-full justify-between rounded-full px-6" disabled={loading || !text.trim()} onClick={() => { setFilename(""); void run(() => check({ text })); }}>Check text {loading ? <LoaderCircle className="animate-spin" /> : <ArrowUpRight />}</Button>
         <p className="mt-4 flex items-center justify-center gap-2 text-xs text-muted-foreground"><ShieldCheck size={14} /> Your slip stays between you and Collecty.</p>
       </div>
+    </div>
+    <div className="paste-zone" style={{ marginTop: 24 }}>
+      <div className="flex flex-wrap items-center justify-between gap-2"><label htmlFor="contract" className="text-sm font-semibold">Your contract prices</label><span className="text-xs text-muted-foreground">Every restaurant has its own. Edit any price, then check again.</span></div>
+      <textarea id="contract" value={contract} disabled={loading} onChange={e => setContract(e.target.value)} rows={7} className="slip-textarea" />
+      <div className="mt-3 flex justify-end"><Button variant="link" className="h-8 px-0 text-xs" disabled={loading} onClick={() => setContract(CONTRACT)}>Reset to Ontario Fresh Foods prices</Button></div>
     </div>
     {loading && <div role="status" className="scanning-state"><div className="scan-paper"><div /><div /><div /><div /><span className="scanning-line" /></div><p>{["Reading slip…", "Checking prices…", "Finding your money…"][step]}</p></div>}
     {error && <p role="alert" className="scanner-error"><TriangleAlert size={20} />{error}</p>}

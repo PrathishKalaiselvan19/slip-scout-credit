@@ -6,7 +6,6 @@ import kitchen from "@/assets/collector-kitchen.png.asset.json";
 import { CountUp } from "@/components/count-up";
 import { Scanner } from "@/components/scanner";
 import { Button } from "@/components/ui/button";
-import { PRICING } from "@/lib/collector";
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [
@@ -61,7 +60,6 @@ function Index() {
       <section id="scanner" className="dark-section scanner-section"><div className="section-wrap"><Reveal className="section-heading"><span className="section-kicker">The checker</span><h2>Before the pen moves.</h2><p>Scan the slip, upload the invoice, or paste the text. Collecty does the math.</p></Reveal><Reveal><Scanner /></Reveal></div></section>
       <section id="pricing" className="light-section"><div className="section-wrap"><Reveal className="section-heading"><span className="section-kicker">Pricing</span><h2>Don't pay us until we save you money.</h2></Reveal><div className="pricing-grid">
         <Reveal><article className="price-card"><CircleDollarSign className="text-primary" size={34} /><h3>Recovery audit</h3><p className="price">20%</p><p className="text-muted-foreground">of what we recover · $0 until we save you money</p><p className="mt-8">We check every invoice and recover what you were overcharged. If we don't find money, you don't pay.</p></article></Reveal>
-        <Reveal delay={.1}><article className="price-card price-card-dark"><ShieldCheck size={34} /><h3>Door Guard</h3><p className="price">${PRICING.doorGuardMonthly}<span>/month</span></p><p className="opacity-70">per location · only starts after we've saved you money</p><p className="mt-8">Check deliveries before signing and stop overcharges at the back door.</p></article></Reveal>
       </div></div></section>
     </main>
     <footer className="site-footer"><span className="wordmark">Collecty</span><span>Catch it before you sign.</span></footer>

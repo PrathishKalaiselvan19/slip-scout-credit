@@ -28,3 +28,9 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Application rules
+- Keep checking and document preparation in the browser using the existing external Worker; a visual redesign must not change the service contract.
+- Dynamically import PDF.js only during uploads so its browser-only rendering stays outside SSR.
+- Keep shared checking types and pricing values in the browser-safe collector module so presentation and rule tests use one source.
+- Use Framer Motion for reveal/count animations and honor reduced motion in both React and CSS.

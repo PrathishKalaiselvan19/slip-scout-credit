@@ -1,152 +1,69 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
+import { ArrowUpRight, Camera, CircleDollarSign, FileSearch, ReceiptText, ScanText, ShieldCheck } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
+import kitchen from "@/assets/collector-kitchen.png.asset.json";
+import { CountUp } from "@/components/count-up";
+import { Scanner } from "@/components/scanner";
+import { Button } from "@/components/ui/button";
+import { PRICING } from "@/lib/collector";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "The Collector – Catch it before you sign" },
-      { name: "description", content: "Scan a delivery slip and find overcharges before you sign." },
-      { property: "og:title", content: "The Collector – Catch it before you sign" },
-      { property: "og:description", content: "Scan a delivery slip and find overcharges before you sign." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-    ],
-  }),
+  head: () => ({ meta: [
+    { title: "The Collector – Check deliveries before you sign" },
+    { name: "description", content: "Check every restaurant delivery against your contract in seconds and recover overcharges." },
+    { property: "og:title", content: "The Collector – Catch it before you sign" },
+    { property: "og:description", content: "Snap a delivery slip, catch overcharges, and send a credit email before you sign." },
+    { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" },
+  ] }),
   component: Index,
 });
 
-const API = "https://collecty.kalaiselvanprathish.workers.dev";
-const DEMO = `INVOICE #44821 — Sysco Foods
-Deliver to: Rosa's Kitchen
-Tomatoes, Roma 25lb   10 cs @ $25.00 = $250.00  (contract $20.00)
-Chicken Breast 40lb    5 cs @ $92.00 = $460.00  (contract $92.00)
-Olive Oil 3L           6 ea @ $18.50 = $111.00
-Received: Tomatoes 8 cs, Chicken 5 cs, Olive Oil 4 ea
-TOTAL DUE: $821.00`;
-
-type Issue = { item: string; type: string; charged?: number; should_be?: number; overcharge: number };
-type Result = { verdict: string; owed?: number; issues?: Issue[]; message_to_driver?: string; credit_email?: string };
-
-function resize(file: File): Promise<string> {
-  return new Promise((res, rej) => {
-    const img = new Image();
-    img.onload = () => {
-      const scale = Math.min(1, 1024 / img.width);
-      const c = document.createElement("canvas");
-      c.width = Math.round(img.width * scale);
-      c.height = Math.round(img.height * scale);
-      c.getContext("2d")!.drawImage(img, 0, 0, c.width, c.height);
-      URL.revokeObjectURL(img.src);
-      res(c.toDataURL("image/jpeg", 0.85));
-    };
-    img.onerror = rej;
-    img.src = URL.createObjectURL(file);
-  });
+function Reveal({ children, className = "", delay = 0 }: { children: ReactNode; className?: string; delay?: number }) {
+  const reduced = useReducedMotion();
+  return <motion.div className={className} initial={{ opacity: 0, y: reduced ? 0 : 32 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-80px" }} transition={{ duration: .7, delay, ease: [0.22, 1, 0.36, 1] }}>{children}</motion.div>;
+}
+function Cta({ children, href }: { children: ReactNode; href: string }) {
+  return <Button asChild variant="cinematic" className="cta-button"><a href={href}>{children}<span className="arrow-circle"><ArrowUpRight /></span></a></Button>;
 }
 
-const money = (n?: number) => `$${(n ?? 0).toFixed(2).replace(/\.00$/, "")}`;
+const steps = [
+  ["01", "Snap the slip", Camera, "Photograph the paper the driver hands you, or drop in a PDF."],
+  ["02", "AI reads every line", ScanText, "Quantities, units, prices, fees, and the total are lifted into a clean check."],
+  ["03", "Checked against your contract", FileSearch, "Wrong prices, missing items, and suspicious charges are surfaced instantly."],
+  ["04", "Get your money back", CircleDollarSign, "Tell the driver what is wrong and send a ready credit request."],
+] as const;
 
 function Index() {
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [text, setText] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [result, setResult] = useState<Result | null>(null);
-  const [copied, setCopied] = useState(false);
-
-  async function send(body: object) {
-    setLoading(true); setError(""); setResult(null);
-    try {
-      const r = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-      if (!r.ok) throw new Error(`Server error ${r.status}`);
-      setResult(await r.json());
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
-    } finally { setLoading(false); }
-  }
-
-  async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const f = e.target.files?.[0];
-    e.target.value = "";
-    if (!f) return;
-    try { await send({ image: await resize(f) }); } catch { setError("Couldn't read that photo"); }
-  }
-
-  const dont = result?.verdict === "DONT_SIGN";
-
-  return (
-    <main className="mx-auto min-h-screen max-w-md px-5 pb-16 pt-8 font-sans">
-      <header className="mb-8">
-        <h1 className="font-display text-4xl leading-none tracking-tight">The Collector</h1>
-        <p className="mt-2 text-primary">Catch it before you sign.</p>
-      </header>
-
-      <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={onFile} />
-      <button
-        onClick={() => fileRef.current?.click()}
-        disabled={loading}
-        className="w-full rounded-2xl bg-primary py-8 font-display text-2xl text-primary-foreground shadow-lg transition active:scale-[0.98] disabled:opacity-50"
-      >
-        📷 Scan delivery
-      </button>
-
-      <section className="mt-6 rounded-2xl border border-border bg-card p-4">
-        <div className="mb-2 flex items-center justify-between">
-          <label htmlFor="slip" className="text-sm font-medium text-muted-foreground">Paste slip text</label>
-          <button onClick={() => setText(DEMO)} className="text-sm font-medium text-primary underline-offset-4 hover:underline">Use demo slip</button>
+  const [scrolled, setScrolled] = useState(false);
+  const reduced = useReducedMotion();
+  useEffect(() => { const update = () => setScrolled(window.scrollY > 24); update(); window.addEventListener("scroll", update, { passive: true }); return () => window.removeEventListener("scroll", update); }, []);
+  return <div className="collector-page">
+    <nav className={`site-nav ${scrolled ? "is-scrolled" : ""}`}><a href="#top" className="wordmark">The Collector</a><div className="hidden items-center gap-8 text-sm md:flex"><a href="#how">How it works</a><a href="#pricing">Pricing</a></div><a href="#scanner" className="nav-scan">Check a delivery</a></nav>
+    <main>
+      <section id="top" className="hero-section" style={{ backgroundImage: `url(${kitchen.url})` }}>
+        <div className="hero-overlay" /><div className="film-grain" />
+        <div className="hero-inner">
+          <Reveal className="hero-copy"><p className="eyebrow"><span /> Delivery protection for independent kitchens</p><h1>Catch it before you sign.</h1><p className="hero-subtitle">The Collector checks every delivery against your contract in 10 seconds. You only pay when we find money.</p><Cta href="#scanner">📷 Scan a delivery</Cta></Reveal>
+          <motion.div className="glass-result" initial={{ opacity: 0, y: 30 }} animate={reduced ? { opacity: 1, y: 0 } : { opacity: 1, y: [0, -12, 0] }} transition={reduced ? { duration: .4 } : { opacity: { duration: .6 }, y: { duration: 5, repeat: Infinity, ease: "easeInOut" } }}>
+            <div className="glass-head"><span className="live-pill"><span /> LIVE CHECK</span><ReceiptText size={20} /></div><p className="text-sm opacity-70">Fresh Foods Co. · Invoice #4471</p>
+            <p className="glass-amount"><CountUp value={135.15} decimals={2} prefix="$" /></p><p className="font-semibold text-alert">owed</p>
+            <ul><li>⚠ Mozzarella above contract</li><li>⚠ Fuel surcharge</li><li>⚠ Missed 5% discount</li></ul>
+          </motion.div>
         </div>
-        <textarea id="slip" value={text} onChange={(e) => setText(e.target.value)} rows={6}
-          placeholder="Paste invoice / delivery slip text…"
-          className="w-full resize-y rounded-xl border border-input bg-background p-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
-        <button onClick={() => send({ text })} disabled={loading || !text.trim()}
-          className="mt-3 w-full rounded-xl bg-secondary py-3 font-medium text-secondary-foreground disabled:opacity-40">
-          Check text
-        </button>
       </section>
-
-      {loading && <p className="mt-6 animate-pulse text-center text-muted-foreground">Checking the slip…</p>}
-      {error && <p className="mt-6 rounded-xl bg-destructive/15 p-3 text-center text-destructive">{error}</p>}
-
-      {result && (
-        <section className="mt-6 space-y-4">
-          <div className={`rounded-2xl p-5 font-display text-xl ${dont ? "bg-destructive text-destructive-foreground" : "bg-success text-success-foreground"}`}>
-            {dont ? `🚫 Don't sign — you're owed ${money(result.owed)}` : "✅ Safe to sign"}
-          </div>
-
-          {result.issues?.map((i, k) => (
-            <div key={k} className="rounded-2xl border border-border bg-card p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="font-bold">{i.item}</p>
-                  <p className="text-sm capitalize text-muted-foreground">{i.type}</p>
-                </div>
-                <p className="font-display text-lg text-destructive">+{money(i.overcharge)}</p>
-              </div>
-            </div>
-          ))}
-
-          {result.message_to_driver && (
-            <div className="rounded-2xl border border-primary/40 bg-card p-4">
-              <p className="mb-1 text-xs font-bold uppercase tracking-wider text-primary">Tell the driver</p>
-              <p>{result.message_to_driver}</p>
-            </div>
-          )}
-
-          {result.credit_email && (
-            <div className="rounded-2xl border border-border bg-card p-4">
-              <div className="mb-2 flex items-center justify-between">
-                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Credit email</p>
-                <button
-                  onClick={async () => { await navigator.clipboard.writeText(result.credit_email!); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
-                  className="rounded-lg bg-primary px-3 py-1 text-sm font-medium text-primary-foreground">
-                  {copied ? "Copied!" : "Copy"}
-                </button>
-              </div>
-              <p className="whitespace-pre-wrap text-sm">{result.credit_email}</p>
-            </div>
-          )}
-        </section>
-      )}
+      <section className="light-section stats-section"><div className="section-wrap stat-grid">
+        <Reveal><p className="stat-number"><CountUp value={1} /> in <CountUp value={4} /></p><p>invoices charge the wrong price</p></Reveal>
+        <Reveal delay={.1}><p className="stat-number">~<CountUp value={1.5} decimals={1} suffix="%" /></p><p>of every invoice is overcharge</p></Reveal>
+        <Reveal delay={.2}><p className="stat-number">&lt;<CountUp value={10} suffix="s" /></p><p>to check a delivery</p></Reveal>
+      </div></section>
+      <section id="how" className="dark-section"><div className="section-wrap"><Reveal className="section-heading"><span className="section-kicker">How it works</span><h2>Ten seconds at the back door.</h2></Reveal><div className="step-grid">{steps.map(([number, title, Icon, copy], i) => <Reveal key={number} delay={i * .08}><article className="step-card"><span className="step-number">{number}</span><Icon className="step-icon" strokeWidth={1} /><div><h3>{title}</h3><p>{copy}</p></div></article></Reveal>)}</div></div></section>
+      <section id="scanner" className="dark-section scanner-section"><div className="section-wrap"><Reveal className="section-heading"><span className="section-kicker">The checker</span><h2>Before the pen moves.</h2><p>Scan the slip, upload the invoice, or paste the text. The Collector does the math.</p></Reveal><Reveal><Scanner /></Reveal></div></section>
+      <section id="pricing" className="light-section"><div className="section-wrap"><Reveal className="section-heading"><span className="section-kicker">Pricing</span><h2>Built to pay for itself.</h2></Reveal><div className="pricing-grid">
+        <Reveal><article className="price-card"><CircleDollarSign className="text-primary" size={34} /><h3>Recovery audit</h3><p className="price">{PRICING.recoveryRate * 100}%</p><p className="text-muted-foreground">of what we find · ${PRICING.upfront} upfront</p><p className="mt-8">We review invoices and help recover money you were overcharged.</p></article></Reveal>
+        <Reveal delay={.1}><article className="price-card price-card-dark"><ShieldCheck size={34} /><h3>Door Guard</h3><p className="price">${PRICING.doorGuardMonthly}<span>/month</span></p><p className="opacity-70">per location</p><p className="mt-8">Check deliveries before signing and stop overcharges at the back door.</p></article></Reveal>
+      </div></div></section>
     </main>
-  );
+    <footer className="site-footer"><span className="wordmark">The Collector</span><span>Catch it before you sign.</span></footer>
+  </div>;
 }

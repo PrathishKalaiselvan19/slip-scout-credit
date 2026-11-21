@@ -25,7 +25,7 @@ Subtotal $4,119.00
 HST (13%) $617.85
 TOTAL DUE $4,736.85`;
 export type Issue = { item: string; type: string; charged?: number; should_be?: number; overcharge: number };
-export type Result = { verdict: string; owed?: number; issues?: Issue[]; message_to_driver?: string; credit_email?: string };
+export type Result = { verdict: string; owed?: number; issues?: Issue[]; message_to_driver?: string; credit_email?: string; source?: string };
 export const money = (n?: number) => `$${(n ?? 0).toFixed(2).replace(/\.00$/, "")}`;
 
 export function resize(file: File): Promise<string> {
@@ -48,7 +48,14 @@ export function resize(file: File): Promise<string> {
   });
 }
 
-export async function readPdf(file: File): Promise<{ text: string } | { image: string }> {
+async function toBase64(file: File): Promise<string> {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(binary);
+}
+
+export async function readPdf(file: File): Promise<{ text: string; pdf?: string } | { image: string }> {
   const pdfjs = await import("pdfjs-dist");
   const worker = await import("pdfjs-dist/build/pdf.worker.min.mjs?url");
   pdfjs.GlobalWorkerOptions.workerSrc = worker.default;
@@ -61,7 +68,12 @@ export async function readPdf(file: File): Promise<{ text: string } | { image: s
       lines.push(content.items.map(item => "str" in item ? item.str : "").join(" "));
     }
     const text = lines.join("\n").trim();
-    if (text) return { text };
+    if (text) {
+      // Send the original PDF too: the Worker converts it to Markdown with Cloudflare toMarkdown, falling back to this text.
+      let encoded: string | undefined;
+      try { if (file.size < 4_000_000) encoded = await toBase64(file); } catch { encoded = undefined; }
+      return encoded ? { text, pdf: encoded } : { text };
+    }
     if (pdf.numPages > 1) throw new Error("This scanned PDF has multiple pages. Upload a photo of each slip separately.");
     const page = await pdf.getPage(1);
     const initial = page.getViewport({ scale: 1 });

@@ -3,6 +3,7 @@ import { ArrowUpRight, Camera, Check, CheckCheck, Copy, FileUp, LoaderCircle, Sc
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CountUp } from "@/components/count-up";
+import { RestaurantSetup } from "@/components/restaurant-setup";
 import { CHECKER_URL, CONTRACT, DEMO, money, readPdf, resize, type Result } from "@/lib/collector";
 
 export function Scanner() {
@@ -61,11 +62,7 @@ export function Scanner() {
         <p className="mt-4 flex items-center justify-center gap-2 text-xs text-muted-foreground"><ShieldCheck size={14} /> Your slip stays between you and Collecty.</p>
       </div>
     </div>
-    <div className="paste-zone" style={{ marginTop: 24 }}>
-      <div className="flex flex-wrap items-center justify-between gap-2"><label htmlFor="contract" className="text-sm font-semibold">Your contract prices</label><span className="text-xs text-muted-foreground">Every restaurant has its own. Edit any price, then check again.</span></div>
-      <textarea id="contract" value={contract} disabled={loading} onChange={e => setContract(e.target.value)} rows={7} className="slip-textarea" />
-      <div className="mt-3 flex justify-end"><Button variant="link" className="h-8 px-0 text-xs" disabled={loading} onClick={() => setContract(CONTRACT)}>Reset to Ontario Fresh Foods prices</Button></div>
-    </div>
+    <RestaurantSetup onContract={setContract} disabled={loading} />
     {loading && <div role="status" className="scanning-state"><div className="scan-paper"><div /><div /><div /><div /><span className="scanning-line" /></div><p>{["Reading slip…", "Checking prices…", "Finding your money…"][step]}</p></div>}
     {error && <p role="alert" className="scanner-error"><TriangleAlert size={20} />{error}</p>}
     <AnimatePresence>{result && <motion.div className="results" initial={{ opacity: 0, y: reduced ? 0 : 20 }} animate={{ opacity: 1, y: 0 }}>

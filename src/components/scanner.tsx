@@ -73,6 +73,7 @@ export function Scanner() {
         {dont ? <TriangleAlert size={30} /> : <CheckCheck size={30} />}
         <div><p className="text-sm font-medium">{dont ? "🚫 Don't sign — you're owed" : "✅ Safe to sign"}</p>{dont && <p className="owed-number"><CountUp value={result.owed ?? 0} decimals={2} prefix="$" /></p>}</div>
       </div>
+      {result.source === "markdown" && <p className="mt-3 text-xs text-muted-foreground">📄 PDF converted to Markdown by Cloudflare Workers AI (toMarkdown), then checked line by line.</p>}
       <div className="issue-grid">{result.issues?.map((issue, index) => <motion.div key={`${issue.item}-${index}`} initial={{ opacity: 0, y: reduced ? 0 : 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: reduced ? 0 : index * .1 }} className="issue-card">
         <div className="flex items-start justify-between gap-3"><h4>{issue.item}</h4><span className="overcharge-pill">+{money(issue.overcharge)}</span></div>
         <p className="mt-2 text-sm capitalize text-muted-foreground">{issue.type.replaceAll("_", " ")}</p>

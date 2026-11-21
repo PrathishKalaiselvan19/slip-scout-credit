@@ -1,14 +1,16 @@
-# Welcome to your Lovable project
+# Slip Scout Credit
+
+Build “The Collector – Catch it before you sign”: phone-first, dark theme. A big “📷 Scan delivery” button (file input, accept="image/*", capture="environment"). Resize the photo to max 1024px wide, convert to JPEG base64, and POST JSON {image} to https://collecty.kalaiselvanprathish.workers.dev. Also add a “Paste slip text” box that POSTs {text}, and a “Use demo slip” button that fills the text box with a sample invoice. Results: if verdict is DONT_SIGN, a red banner “🚫 Don’t sign — you’re owed $[owed]”, otherwise a green “✅ Safe to sign”. Below that, issue cards (item, type, overcharge), the message_to_driver, and credit_email with a Copy button.
 
 This project was built with [Lovable](https://lovable.dev).
 
 ## Build with Lovable
 
-Open your project in the [Lovable editor](https://lovable.dev) and keep building.
+Continue developing this project in the [Lovable editor](https://lovable.dev/projects/9e18bbb7-753d-5d79-abb8-d8b4a614e239).
 
 - **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: connect the project to GitHub and every change made in Lovable is committed straight to your repository.
-- **Full ownership**: this code is yours. Push to your repository and your changes sync back into Lovable, ready for your next prompt.
+- **Stay in sync**: every change made in Lovable is committed straight to this repository.
+- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
 
 ## Development
 
@@ -20,10 +22,3 @@ cd <repository-name>
 npm i
 npm run dev
 ```
-
-## Built with
-
-- TanStack Start
-- TypeScript
-- React
-- Tailwind CSS

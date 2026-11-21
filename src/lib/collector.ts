@@ -1,5 +1,14 @@
 export const CHECKER_URL = "https://collecty.kalaiselvanprathish.workers.dev";
 export const PRICING = { recoveryRate: 0.30, upfront: 0, doorGuardMonthly: 199 };
+export const CONTRACT = [
+  "Supplier: Ontario Fresh Foods Wholesale",
+  "Produce (tomatoes, lettuce, onions, herbs): $22.50 per unit",
+  "Dairy (mozzarella, cream, butter): $37.00 per unit",
+  "Dry goods (pasta, flour, canned tomatoes): $28.00 per unit",
+  "Proteins (chicken breast): $39.00 per unit",
+  "Beverages (sparkling water & soft drinks): $32.00 per unit",
+  "No other products are part of this agreement.",
+].join("\n");
 export const DEMO = `INVOICE
 Invoice Number: GTA-26-2210   Date: 2026-11-20
 Supplier: Ontario Fresh Foods Wholesale (Sample)

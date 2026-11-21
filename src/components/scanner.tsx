@@ -57,7 +57,7 @@ export function Scanner() {
         <div className="flex flex-wrap items-center justify-between gap-2"><label htmlFor="slip" className="text-sm font-semibold">Paste slip text</label><Button variant="link" className="h-8 px-0 text-xs" disabled={loading} onClick={() => { setText(DEMO); setFilename(""); }}>Use demo slip <ArrowUpRight /></Button></div>
         <textarea id="slip" value={text} disabled={loading} onChange={e => setText(e.target.value)} rows={7} placeholder="Invoice number, items, quantities, prices…" className="slip-textarea" />
         <Button variant="secondary" className="mt-4 h-12 w-full justify-between rounded-full px-6" disabled={loading || !text.trim()} onClick={() => { setFilename(""); void run(() => check({ text })); }}>Check text {loading ? <LoaderCircle className="animate-spin" /> : <ArrowUpRight />}</Button>
-        <p className="mt-4 flex items-center justify-center gap-2 text-xs text-muted-foreground"><ShieldCheck size={14} /> Your slip stays between you and The Collector.</p>
+        <p className="mt-4 flex items-center justify-center gap-2 text-xs text-muted-foreground"><ShieldCheck size={14} /> Your slip stays between you and Collecty.</p>
       </div>
     </div>
     {loading && <div role="status" className="scanning-state"><div className="scan-paper"><div /><div /><div /><div /><span className="scanning-line" /></div><p>{["Reading slip…", "Checking prices…", "Finding your money…"][step]}</p></div>}
